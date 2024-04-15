@@ -1,0 +1,41 @@
+#!/bin/tcsh -f
+
+#
+# This script will copy files from the current dir 
+# into the baseline directory.  One file at a time.
+# User needs to create the directory in baseline repro.
+#
+
+set logfile = /dev/null
+
+if ( x`uname` == xLinux) then
+  set baseline = /data/sdsreg/results/ciao_linux64_baseline_repro
+else
+  set baseline = /Users/kjg/Mount/root/data/sdsreg/results/ciao_osx_baseline_repro/
+endif
+
+
+set curdir = `pwd`
+set test_id = `echo $curdir | awk -F/ '{print $(NF-1)"/"$(NF)}'`
+
+if ( -d $baseline/$test_id) then
+  echo "Found baseline dir" > $logfile
+else
+  echo "ERROR: Directory $baseline/$test_id not found"
+  exit 1
+endif
+
+if ( $# > 1 ) then
+  echo "ERROR: Only 1 file at a time please"
+  exit 1
+endif
+
+
+set to_copy = $1
+if ( -f $to_copy ) then
+  cp -fv ${to_copy} ${baseline}/${test_id}/ |& tee -a $logfile 
+else
+  echo "ERROR: File '$to_copy' not found"
+  exit 1
+endif
+
