@@ -19,7 +19,7 @@ with open(infile,"r") as fp:
 
 new_logfile = "{}".format(logfile)  # make a copy
 
-regex = "[0-9]*\.[0-9]{{{0},}}".format(_max_digits+1)
+regex = r"[0-9]*\.[0-9]{{{0},}}".format(_max_digits+1)
 long_number = re.compile(regex)  # numbers w/ 5 or more digits after decimal
 
 
