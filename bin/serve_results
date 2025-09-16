@@ -24,7 +24,7 @@ test scripts to make it easier to investigate differences.
 
 
 
-import six
+# ~ import six
 import sqlite3 as sql
 import sys
 import os
@@ -451,7 +451,7 @@ def get_delta_times( rr ):
 
     time_running = []
     time_complete = []
-    for s,c,d in six.moves.zip( start, chk, done):
+    for s,c,d in zip( start, chk, done):
         if not s and not c and not d:
             time_running.append(0)
             time_complete.append(0)
@@ -512,7 +512,7 @@ def report():
       <tbody>      
     """
 
-    for row, dt, dc in six.moves.zip( rr, time_running, time_complete ):
+    for row, dt, dc in zip( rr, time_running, time_complete ):
         tab = tab + "<tr>"
         tab = tab + '<td><a href="/diff/{tool}/{testid}">{tool}/{testid}</a></td>'.format( tool=row[0], testid=row[1] )
         for i in range( 2, len(row)):
@@ -555,7 +555,8 @@ def doit():
     time_running, time_complete, exec_time = get_delta_times( rr )
     
     retval = '{{ "exec_time" : "{}", "table" : ['.format( exec_time )
-    moo = [ '{{"tool":"{}", "testid":"{}", "status":"{}", "runtime": {}, "chktime": {} }}'.format(r[0],r[1],r[2],int(t1),int(t2)) for r,t1,t2 in six.moves.zip(rr, time_running, time_complete) ]
+    moo = [ '{{"tool":"{}", "testid":"{}", "status":"{}", "runtime": {}, "chktime": {} }}'.format(r[0],r[1],r[2],int(t1),int(t2)) 
+            for r,t1,t2 in zip(rr, time_running, time_complete) ]
     retval = retval + ",\n".join(moo)
     retval = retval + "] }"
 
@@ -609,7 +610,7 @@ def render_main():
     # as place holders, these are replaced with actual state during
     # the /update procedure
     tab = "<h3>Details</h3><p>Click icon for details</p><table>"
-    for tool,test in six.moves.zip( tools, tests ):
+    for tool,test in zip( tools, tests ):
         tab = tab + '<tr id="{}">'.format(tool)
         tab = tab + '<td style="vertical-align: top;" >{}</td>'.format(tool) 
         tab = tab + '<td>'
@@ -643,6 +644,7 @@ def render_main():
       <tr><td style='vertical-align: middle'><img src="/checking.png" alt="img"> Checking</td><td id="num_checking" class="num">0</td><td id="is_checking"></td></tr>
       <tr><td style='vertical-align: middle'><img src="/pass.png" alt="img"> Pass</td><td id="num_passing" class="num">0</td><td></td></tr>
       <tr><td style='vertical-align: middle'><img src="/fail.png" alt="img"> Fail</td><td id="num_failing" class="num">0</td><td id="is_failing"></td></tr>
+      <tr><td style='vertical-align: middle'><img src="/expected_failure.png" alt="img"> Expected Failure</td><td id="num_expected" class="num">0</td><td id="is_expected"></td></tr>
       <tr><td style='vertical-align: middle'><img src="/other.png" alt="img"> Other</td><td id="num_other" class="num">0</td><td id="is_other"></td></tr>    
       <tr><td style='vertical-align: middle'><img src="/completed.png" alt="img"> Completed (no baseline)</td><td id="num_complete" class="num">0</td><td id="is_complete"></td></tr>    
     </table>

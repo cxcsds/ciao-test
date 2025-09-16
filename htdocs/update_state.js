@@ -27,6 +27,8 @@ function get_icon( state ) {
     retval = "fail";
   } else if ( state == "complete" ) {
     retval = "completed";
+  } else if ( state == "expected_failure") {
+    retval = "expected_failure";
   } else {
     retval = "other";
   }
@@ -58,11 +60,13 @@ function update_func( exec_time, arr ) {
     var num_oth = 0;
     var num_pnd = 0;
     var num_complete =0;
+    var num_expected = 0;
 
     var is_running = "";
     var is_checking = "";
     var is_failing = "";
     var is_other = "";
+    var is_expected = "";
 
     for (ii=0; ii < arr.length; ii++) {
         var tool = arr[ii].tool;
@@ -90,6 +94,9 @@ function update_func( exec_time, arr ) {
           num_pnd++;
         } else if (st == 'complete') {
           num_complete++;
+        } else if (st == "expected_failure") {
+          num_expected++;
+          is_expected = is_expected + mk_elem(tool, tst, "");
         } else {
           num_oth++;
           is_other = is_other + mk_elem( tool, tst, "" );
@@ -101,6 +108,7 @@ function update_func( exec_time, arr ) {
   document.getElementById("num_checking").innerHTML = num_chk;
   document.getElementById("num_passing").innerHTML = num_ok;
   document.getElementById("num_failing").innerHTML = num_bad;
+  document.getElementById("num_expected").innerHTML = num_expected;
   document.getElementById("num_other").innerHTML = num_oth;
   document.getElementById("num_pending").innerHTML = num_pnd;
   document.getElementById("num_complete").innerHTML = num_complete;
@@ -108,6 +116,7 @@ function update_func( exec_time, arr ) {
   document.getElementById("is_running").innerHTML = is_running;
   document.getElementById("is_checking").innerHTML = is_checking;
   document.getElementById("is_failing").innerHTML = is_failing;
+  document.getElementById("is_expected").innerHTML = is_expected;
   document.getElementById("is_other").innerHTML = is_other;
 
   if (( num_run + num_chk + num_pnd ) == 0 ) {

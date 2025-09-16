@@ -102,7 +102,7 @@ def list_tests():
     return test_list
 
 
-def parse_compare_log( logfile, tool, testid ):
+def parse_compare_log( logfile, baseline_dir, tool, testid ):
     """
     Parse the compare_results output.  Since we run 1 test at a time
     we just need the next-to last line.
@@ -119,8 +119,8 @@ def parse_compare_log( logfile, tool, testid ):
     comment = " ".join( stt[1:])
 
     if u'pass' in state and 'ES' in comment:
-        state = 'exit_nonzero'
-        
+        state = 'expected_failure'
+
     return state, comment
 
 
@@ -204,7 +204,7 @@ def run_test_X( tool, testid, output_dir, baseline_dir ):
             stt = subprocess.check_call( ["compare_results", "-c", "smart_diff -l {}".format(difffile), baseline_dir, output_dir, tool, testid], stdout=fp, stderr=fp)
         stop_time = str(dt.datetime.now())
 
-        state, comment = parse_compare_log( results, tool, testid )
+        state, comment = parse_compare_log( results, baseline_dir, tool, testid )
         update_db( db, tool, testid, state, comment, end_test=stop_time )
 
     db.close()
