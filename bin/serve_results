@@ -8,7 +8,7 @@ and producing diffs in the named directory.  That test must have been
 started with the parallel_run_and_compare script.
 
 % ciao
-% ciaotest 
+% ciaotest
 
 % parallel_run_and_compare baseline_test test_name [tools [test] ] &
 
@@ -60,24 +60,24 @@ def re_run_test_for_tool( tool, testid ):
     Re run a test in the current environment
     """
     import subprocess as sp
-    
+
     # TODO:  check ciao setup for correct built
     # TODO:  deal with multiple '-' in diff dir
-    
+
     diff_dir = sys.argv[1].split("-")
     if len(diff_dir) != 2:
         raise RuntimeError("I can't work with directories with a '-' in them yet")
-    
+
     basedir = diff_dir[0]
     testdir = diff_dir[1]
-    
+
     cmd = [ "parallel_run_and_compare", basedir, testdir, "-u", tool, testid ]
-    
+
     sp.Popen( cmd , stdout=open('/dev/null', 'w'), stderr=open('/dev/null', 'w'))
     response.content_type = "application/json"
     return "{}"
-    
-    
+
+
 
 
 
@@ -86,7 +86,7 @@ def re_run_test_for_tool( tool, testid ):
 def show_diff_file( tool, testid, filename ):
     """
     Displays the contents of the smart_diff diff files.
-        
+
     """
     difffile = "{}/{}/{}/{}_{}".format(os.environ["CIAOTEST_RESULTS"], sys.argv[1],tool,testid,filename)
     if os.path.exists( difffile ):
@@ -97,28 +97,38 @@ def show_diff_file( tool, testid, filename ):
             retval = fp.read()
     else:
         retval = "Diff file does not exist"
-    
+
     if len(retval) == 0:
         retval = "No differences found"
-    
+
     _r = retval.split("\n")
     if len(_r) > 500:
         _r = _r[:500]
         _r.append("...Diff file truncated.  More than 500 lines...\n")
         retval = "\n".join(_r)
 
+    hdr = "<html><head><title>"
+    hdr = hdr+"/".join([tool, testid, filename])
+    hdr = hdr+"</title></head>"
+    hdr = hdr+"<body><h2>"+filename+"</h2>"
+    hdr = hdr+ '<pre class="prettyprint"><code class="language-diff">'
+    hdr = hdr+retval
+    hdr = hdr+'</code></pre>'
+    hdr = hdr+'<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>'
+    hdr = hdr+'</body></html>'
 
-    response.content_type = "text/plain"
-    return retval
+    response.content_type = "text/html"
+
+    return hdr
 
 
 
 def parse_diff_table( tool, testid, table ):
     """
-    Parse the smart diff .diff file into a table so that 
+    Parse the smart diff .diff file into a table so that
     we can sort it.
-    
-    """    
+
+    """
 
     top = """
     <table id="myTable" class="tablesorter">
@@ -128,25 +138,25 @@ def parse_diff_table( tool, testid, table ):
           <th>State (0=good)</th>
         </tr>
       </thead>
-      <tbody>      
+      <tbody>
     """
     end = """
       </tbody>
     </table>
-    <script>$(document).ready(function() 
-    { 
-        $("#myTable").tablesorter(); 
-    } 
-    ); 
+    <script>$(document).ready(function()
+    {
+        $("#myTable").tablesorter();
+    }
+    );
     </script>
     """
-    
+
     # Parse the table, turn into HTML and add a link to the /diff bininding
     rows = table.split("\n")
     rr = [ x.split() for x in rows if len(x)>0]
     table = ['<tr><td><a href="/diff/{0}/{1}/{2}">{2}</td><td>{3}</td></tr>'.format(tool,testid,x[0],x[1]) for x in rr ]
     table = "".join(table)
-    
+
     retval = top+table+end
     return retval
 
@@ -176,7 +186,7 @@ def display_test_tolerance( tool ):
 
     response.content_type = "text/html"
     return hdr
-        
+
 
 
 @route('/test/sources/<tool>')
@@ -184,10 +194,10 @@ def display_test_sources( tool ):
     """
     Display the tolerance file
     """
-    dfile = "{}/{}/sources.txt".format(os.environ["CIAOTEST_TESTS"], tool) 
+    dfile = "{}/{}/sources.txt".format(os.environ["CIAOTEST_TESTS"], tool)
     if not os.path.exists( dfile ):
         response.content_type = "text/plain"
-        return "Missing "+dfile 
+        return "Missing "+dfile
 
     with open(dfile, "r") as fp:
         retval = fp.read()
@@ -204,7 +214,7 @@ def display_test_sources( tool ):
 
     response.content_type = "text/html"
     return hdr
-        
+
 
 
 
@@ -238,7 +248,7 @@ def display_test_script( tool, testid, main_or_aux ):
 
     response.content_type = "text/html"
     return hdr
-    
+
 
 
 
@@ -251,13 +261,13 @@ def display_diff_file( tool, testid ):
     """
 
     difffile = "{}/{}/{}_{}.diff".format(os.environ["CIAOTEST_RESULTS"], sys.argv[1],tool,testid)
-    
+
     hdr = """
     <html>
     <head>
       <title>{tool}/{testid}</title>
     """.format(tool=tool,testid=testid)
-    
+
     hdr = hdr + """
       <script type="text/javascript" src="/tablesorter/jquery-latest.js"></script>
       <script type="text/javascript" src="/tablesorter/jquery.tablesorter.js"></script>
@@ -267,25 +277,25 @@ def display_diff_file( tool, testid ):
     xhttp.onreadystatechange = function() {
      if (xhttp.readyState == 4 && xhttp.status == 200) {
         // location.assign("/");
-       };    
+       };
      };
-     
+
     xhttp.open("GET", "/run/test/"+tl+"/"+tstid, true );
     xhttp.send();
 
     location.assign("/");
     }
-      
-      
+
+
       </script>
       <link rel="stylesheet" type="text/css" href="/tablesorter/themes/blue/style.css">
     </head>
     <body>"""
-    
+
     hdr = hdr+"""<h2>{tool}/{testid}</h2>""".format(tool=tool,testid=testid)
- 
+
     hdr = hdr + """<img src="/rerun_plain.png" alt="re-run test" onclick="rerun('{tool}','{testid}'); "> """.format(tool=tool, testid=testid)
-    
+
     hdr = hdr + """Test Script: <a href="/test/{tool}/{testid}/MAIN">{testid}.MAIN</a>
     """.format(tool=tool,testid=testid)
 
@@ -297,7 +307,7 @@ def display_diff_file( tool, testid ):
     if os.path.exists( dfile ):
         hdr = hdr + """ <a href="/test/tolerance/{tool}">{tool}.tol</a>""".format(tool=tool)
 
-    dfile = "{}/{}/sources.txt".format(os.environ["CIAOTEST_TESTS"], tool) 
+    dfile = "{}/{}/sources.txt".format(os.environ["CIAOTEST_TESTS"], tool)
     if os.path.exists( dfile ):
         hdr = hdr + """ <a href="/test/sources/{tool}">sources.txt</a>""".format(tool=tool)
 
@@ -312,7 +322,7 @@ def display_diff_file( tool, testid ):
       <table>
           <tr><td><textarea name="notes">{notes}</textarea></td></tr>
           <tr><td><input type="submit" name="submit" value="edit" id="submit"/></td></tr>
-      </table>    
+      </table>
     </form>
     """.format( tool=tool, testid=testid, notes=notes)
 
@@ -343,13 +353,13 @@ def update_notes( tool, testid ):
         notes = tmp
     except:
         pass
-    
+
     db = sql.connect( db_file, timeout=30.0, isolation_level=None)
     with db:
         db.execute( "UPDATE regression_tests SET comment = ? WHERE tool == ? and testid == ?",(notes, tool, testid))
     db.commit()
     db.close()
-    
+
 
 
 @route('/<script>.js')
@@ -359,7 +369,7 @@ def serve_js(script):
     """
     with open( ROOT+"/{}.js".format(script), "r") as fp:
         js = fp.read()
-    
+
     response.content_type = "text/javascript"
     return js
 
@@ -371,7 +381,7 @@ def serve_tablesorter_js(script):
     """
     with open( ROOT+"/tablesorter/{}.js".format(script), "r") as fp:
         js = fp.read()
-    
+
     response.content_type = "text/javascript"
     return js
 
@@ -383,7 +393,7 @@ def serve_tablesorter_css(theme,style):
     """
     with open( ROOT+"/tablesorter/themes/{}/{}.css".format(theme,style), "r") as fp:
         js = fp.read()
-    
+
     response.content_type = "text/css"
     return js
 
@@ -395,7 +405,7 @@ def serve_tablesorter_gif(theme,image):
     """
     with open( ROOT+"/tablesorter/themes/{}/{}.gif".format(theme,image), "rb") as fp:
         js = fp.read()
-    
+
     response.content_type = "image/gif"
     return js
 
@@ -409,22 +419,22 @@ def pass_png(state):
     """
     with open( ROOT+"/{}.png".format(state), "rb" ) as fp:
         png = fp.read()
-    
+
     response.content_type = "image/png"
     return png
 
 
 def get_delta_times( rr ):
     """
-    
+
     """
     import datetime as dt
     _fmt2 = "%Y-%m-%d %H:%M:%S"
 
     now = dt.datetime.now()
     start = [ dt.datetime.strptime( r[4].split(".")[0], _fmt2) if len(r[4])>0 else 0 for r in rr]
-    chk   = [ dt.datetime.strptime( r[5].split(".")[0], _fmt2) if len(r[5])>0 else 0 for r in rr]     
-    done  = [ dt.datetime.strptime( r[6].split(".")[0], _fmt2) if len(r[6])>0 else 0 for r in rr]     
+    chk   = [ dt.datetime.strptime( r[5].split(".")[0], _fmt2) if len(r[5])>0 else 0 for r in rr]
+    done  = [ dt.datetime.strptime( r[6].split(".")[0], _fmt2) if len(r[6])>0 else 0 for r in rr]
 
     smin = start[:]
     smin = [x for x in smin if x != 0 ] #filter( lambda x: x is not 0, smin)
@@ -432,14 +442,14 @@ def get_delta_times( rr ):
         smin = [now]
     smin.sort()
 
-    if any( map(lambda x: x == 0, done)): 
+    if any( map(lambda x: x == 0, done)):
         # Use current time if any tests not done
         smax = [now]
     else:
         # Use the max time of completed tests
         smax = done[:]
         smax.sort()
-    
+
     exec_time = (smax[-1]-smin[0]).total_seconds()
     hh = int(exec_time / 3600)
     lo = exec_time - (hh*3600)
@@ -447,7 +457,7 @@ def get_delta_times( rr ):
     lo = lo - (mm*60)
     ss = int(lo)
     exec_time = '{:02d}:{:02d}:{:02d}'.format(hh,mm,ss)
-    
+
 
     time_running = []
     time_complete = []
@@ -478,11 +488,11 @@ def report():
     Create the test report
     """
     db = sql.connect( db_file, timeout=30.0, isolation_level=None)
-    rr = db.execute( "SELECT * from regression_tests  ORDER BY tool, testid")    
+    rr = db.execute( "SELECT * from regression_tests  ORDER BY tool, testid")
     rr = [ r for r in rr]
 
     time_running, time_complete, exec_time = get_delta_times( rr )
-    
+
     hdr = """
     <html>
     <head>
@@ -493,7 +503,7 @@ def report():
     </head>
     <body><h2>Detailed Test Report</h2>
     """
-    
+
     tab = """
     <table id="myTable" class="tablesorter">
       <thead>
@@ -504,12 +514,12 @@ def report():
           <th>Run Start Time</th>
           <th>Check Start Time</th>
           <th>End Time</th>
-          <th>Run Time</th> 
+          <th>Run Time</th>
           <th>Check Time</th>
           <th>Total Time</th>
         </tr>
       </thead>
-      <tbody>      
+      <tbody>
     """
 
     for row, dt, dc in zip( rr, time_running, time_complete ):
@@ -525,17 +535,17 @@ def report():
     end = """
       </tbody>
     </table>
-    <script>$(document).ready(function() 
-    { 
-        $("#myTable").tablesorter(); 
-    } 
-    ); 
+    <script>$(document).ready(function()
+    {
+        $("#myTable").tablesorter();
+    }
+    );
     </script></body></html>
     """
-    
+
     response.content_type = "text/html"
     return hdr+tab+end
-    
+
 
 
 
@@ -544,18 +554,18 @@ def report():
 @get('/update')
 def doit():
     """
-    Generate the JSON content needed by the javascript to 
+    Generate the JSON content needed by the javascript to
     update the state of all the icons and statistics
     """
 
     db = sql.connect( db_file, timeout=30.0, isolation_level=None)
-    rr = db.execute( "SELECT * from regression_tests  ORDER BY tool, testid")    
+    rr = db.execute( "SELECT * from regression_tests  ORDER BY tool, testid")
     rr = [ r for r in rr]
 
     time_running, time_complete, exec_time = get_delta_times( rr )
-    
+
     retval = '{{ "exec_time" : "{}", "table" : ['.format( exec_time )
-    moo = [ '{{"tool":"{}", "testid":"{}", "status":"{}", "runtime": {}, "chktime": {} }}'.format(r[0],r[1],r[2],int(t1),int(t2)) 
+    moo = [ '{{"tool":"{}", "testid":"{}", "status":"{}", "runtime": {}, "chktime": {} }}'.format(r[0],r[1],r[2],int(t1),int(t2))
             for r,t1,t2 in zip(rr, time_running, time_complete) ]
     retval = retval + ",\n".join(moo)
     retval = retval + "] }"
@@ -567,10 +577,10 @@ def doit():
 @route('/')
 def render_main():
     """
-    Create the top page, seeding all the icons and stats for the 
+    Create the top page, seeding all the icons and stats for the
     tests that are running.  List of tests/etc comes from the
     sqlite table.
-    
+
     """
 
     response.content_type = "text/html"
@@ -581,7 +591,7 @@ def render_main():
         retval = """
         <html>
         <head><title>Waiting...</title></head>
-        <body><h3>Waiting for database to become available.</h3>  
+        <body><h3>Waiting for database to become available.</h3>
         This page will automatically reload.
         <script>
             setTimeout( function(){location.reload(true);}, 1000);
@@ -591,11 +601,11 @@ def render_main():
         """
         return retval
 
-    rr = db.execute( "SELECT * from regression_tests  ORDER BY tool, testid")    
+    rr = db.execute( "SELECT * from regression_tests  ORDER BY tool, testid")
 
     res = list(zip(*rr))  # db returns an iterable, need to save copy
     rr = list(zip(*res))
-    
+
     tools = list(set( res[0] )) # Get list of tools
     tools.sort()
     tests = []
@@ -612,14 +622,14 @@ def render_main():
     tab = "<h3>Details</h3><p>Click icon for details</p><table>"
     for tool,test in zip( tools, tests ):
         tab = tab + '<tr id="{}">'.format(tool)
-        tab = tab + '<td style="vertical-align: top;" >{}</td>'.format(tool) 
+        tab = tab + '<td style="vertical-align: top;" >{}</td>'.format(tool)
         tab = tab + '<td>'
         for tst in test:
             tab = tab + ' <div id="{0}_{1}" title="{0}/{1}" style="display: inline;">TBD</div>'.format(tool, tst)
         tab = tab + '</td></tr>'
     tab = tab + '</table>'
-        
-    
+
+
     # Create the summary table.  Actual live values are updated
     # via the TDs id's.
 
@@ -645,11 +655,11 @@ def render_main():
       <tr><td style='vertical-align: middle'><img src="/pass.png" alt="img"> Pass</td><td id="num_passing" class="num">0</td><td></td></tr>
       <tr><td style='vertical-align: middle'><img src="/fail.png" alt="img"> Fail</td><td id="num_failing" class="num">0</td><td id="is_failing"></td></tr>
       <tr><td style='vertical-align: middle'><img src="/expected_failure.png" alt="img"> Expected Failure</td><td id="num_expected" class="num">0</td><td id="is_expected"></td></tr>
-      <tr><td style='vertical-align: middle'><img src="/other.png" alt="img"> Other</td><td id="num_other" class="num">0</td><td id="is_other"></td></tr>    
-      <tr><td style='vertical-align: middle'><img src="/completed.png" alt="img"> Completed (no baseline)</td><td id="num_complete" class="num">0</td><td id="is_complete"></td></tr>    
+      <tr><td style='vertical-align: middle'><img src="/other.png" alt="img"> Other</td><td id="num_other" class="num">0</td><td id="is_other"></td></tr>
+      <tr><td style='vertical-align: middle'><img src="/completed.png" alt="img"> Completed (no baseline)</td><td id="num_complete" class="num">0</td><td id="is_complete"></td></tr>
     </table>
    '''.format( num_tests=len(res[0]))
-   
+
 
     # Create the basic web page, adds a bit of CSS to make pretty
     template = """
@@ -669,7 +679,7 @@ def render_main():
       td.num {
         text-align: right;
       }
-    
+
       .nice_info {
         background-color : #cfcfcf;
         padding-left: 5px;
@@ -677,7 +687,7 @@ def render_main():
       }
 
     </style>
-    
+
     </head>
     <body>"""+summary+tab+"""
     <script language="JavaScript" type="text/javascript" src="/update_state.js"></script>
